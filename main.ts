@@ -1,24 +1,24 @@
-// ai-excited-01: "Kraken Tower" — a colossal kraken smashing through a glass
-// skyscraper at dusk, tentacles bursting out of shattered windows while a
-// tiny helicopter circles below. One impossible collision, frozen mid-burst:
-// the image is built to hit the judge with a jolt on the first look.
-//
-// The program is deliberately trivial and deterministic: it copies the
-// entry image that ships beside this file into the grader's output
-// directory, byte for byte, every run. No randomness, no timestamps,
-// no network, no dependencies beyond the Node standard library.
-//
-// Local run:  mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-// Grader run: the sandbox sets /output itself; MAKEFUN_OUTPUT_DIR is unset.
+import { copyFileSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-import { copyFileSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
+const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
+const here = dirname(fileURLToPath(import.meta.url));
+const sourcePath = join(here, "entry.png");
+const destPath = join(outputDir, "entry.png");
 
-const OUTPUT_DIR = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-const IMAGE_NAME = "entry.png";
+mkdirSync(outputDir, { recursive: true });
+copyFileSync(sourcePath, destPath);
 
-mkdirSync(OUTPUT_DIR, { recursive: true });
-copyFileSync(
-  new URL(`./${IMAGE_NAME}`, import.meta.url),
-  join(OUTPUT_DIR, IMAGE_NAME),
-);
+const sourceBytes = readFileSync(sourcePath);
+const destBytes = readFileSync(destPath);
+
+if (!sourceBytes.equals(destBytes)) {
+  console.error(
+    `error: output mismatch: source entry.png is ${sourceBytes.length} bytes, ` +
+      `output entry.png is ${destBytes.length} bytes`,
+  );
+  process.exit(1);
+}
+
+console.log(`copied entry.png (${sourceBytes.length} bytes) to ${destPath}`);
